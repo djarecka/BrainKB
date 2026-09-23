@@ -78,14 +78,8 @@ def load_environment(env_name="env"):
         #query service
         "QUERY_SERVICE_BASE_URL": os.getenv("QUERY_SERVICE_BASE_URL", "localhost:8010"),
 
-        #mongodb
-        "MONGO_DB_URL": os.getenv("MONGO_DB_URL"),
-        "NER_DATABASE": os.getenv("NER_DATABASE","ner_database"),
-        "NER_COLLECTION": os.getenv("NER_COLLECTION","ner_collection"),
-
         #structsense
         "ENABLE_KG_SOURCE": os.getenv("ENABLE_KG_SOURCE", "False"),
-        "ONTOLOGY_DATABASE": os.getenv("ONTOLOGY_DATABASE", "ontology_database_agent_test1"),
         "WEAVIATE_GRPC_HOST": os.getenv("WEAVIATE_GRPC_HOST"),
         "WEAVIATE_HTTP_HOST": os.getenv("WEAVIATE_HTTP_HOST"),
         "WEAVIATE_API_KEY": os.getenv("WEAVIATE_API_KEY"),
