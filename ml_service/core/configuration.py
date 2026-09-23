@@ -48,7 +48,6 @@ def load_environment(env_name="env"):
     # Return a dictionary containing the loaded environment variables
     return {
         "ENV_STATE": os.getenv("ENV_STATE"),
-        "LOGTAIL_API_KEY": os.getenv("LOGTAIL_API_KEY"),
         "JWT_POSTGRES_DATABASE_HOST_URL": os.getenv("JWT_POSTGRES_DATABASE_HOST_URL"),
         "JWT_POSTGRES_DATABASE_PORT": os.getenv("JWT_POSTGRES_DATABASE_PORT"),
         "JWT_POSTGRES_DATABASE_USER": os.getenv("JWT_POSTGRES_DATABASE_USER"),
