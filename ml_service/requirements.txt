@@ -71,7 +71,7 @@ ollama==0.6.0
 # (installed in its own pip step — see the note below).
 beautifulsoup4>=4.12
 python-dotenv>=1.0
-rdflib>=6.0
+rdflib>=7.1,<8
 PyYAML>=6.0
 
 # SynthScholar (PRISMA literature review). The `synthscholar` package owns the AI
