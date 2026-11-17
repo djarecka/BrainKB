@@ -3,7 +3,7 @@
 Stored (named) SPARQL queries that anyone allowed to read a space may run
 against that space's graph, without the admin-only arbitrary-SPARQL endpoint.
 
-Each entry is a fixed query from the BrainKB UI (/taxonomy, /literature).
+Each entry is a fixed query from the BrainKB UI (/taxonomy, /literature, /browse).
 Callers choose the query by name and supply only:
   graph     -- a named graph that belongs to a space (checked for read access)
   and the parameters the query declares, each validated before substitution:
@@ -12,7 +12,7 @@ Callers choose the query by name and supply only:
 Every query ends in a LIMIT; `limit` is that cap, so callers can tell when a
 result was cut off.
 
-Generated from brainkb-ui src/app/{taxonomy,literature}/queries.ts; keep the two
+Generated from brainkb-ui src/app/{taxonomy,literature,browse}/queries.ts; keep the two
 in step when a page's query changes.
 """
 
@@ -500,5 +500,75 @@ WHERE {
   }
 }
 LIMIT 5""",
+    },
+    # The entities of one class ({{category}}, an IRI-valued biolink:category),
+    # with their label and description.
+    "browse.entities": {
+        "params": {'category': 'iri'},
+        "limit": 2000,
+        "query": """PREFIX biolink: <https://w3id.org/biolink/vocab/>
+PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?id (SAMPLE(?label) AS ?name) (SAMPLE(?desc) AS ?description)
+WHERE {
+  GRAPH <{{graph}}> {
+    ?id biolink:category <{{category}}> .
+    OPTIONAL { ?id rdfs:label ?label }
+    OPTIONAL { ?id dct:description ?desc }
+  }
+}
+GROUP BY ?id
+ORDER BY ?name ?id
+LIMIT 2000""",
+    },
+    # One entity's detail view ({{id}}): its own triples, what points at it, and
+    # each neighbour's class and label. Data that links by IRI only, so none of the
+    # typed-literal branches of the default detail query.
+    "browse.detail": {
+        "params": {'id': 'iri'},
+        "limit": 2000,
+        "query": """PREFIX biolink: <https://w3id.org/biolink/vocab/>
+PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?direction ?predicate ?other ?otherCategory ?otherLabel
+WHERE {
+  GRAPH <{{graph}}> {
+    { BIND("out" AS ?direction) <{{id}}> ?predicate ?other . }
+    UNION
+    { BIND("in" AS ?direction) ?other ?predicate <{{id}}> . }
+    UNION
+    { BIND("class" AS ?direction) <{{id}}> ?predicate ?other . ?other biolink:category ?otherCategory . }
+    UNION
+    { BIND("class" AS ?direction) ?other ?predicate <{{id}}> . ?other biolink:category ?otherCategory . }
+    UNION
+    { BIND("label" AS ?direction) <{{id}}> ?predicate ?other . FILTER(isIRI(?other)) ?other rdfs:label ?otherLabel . }
+    UNION
+    { BIND("label" AS ?direction) ?other ?predicate <{{id}}> . ?other rdfs:label ?otherLabel . }
+  }
+}
+LIMIT 2000""",
+    },
+    # Each cluster's named taxa ({{clusters}}, a list of cluster IRIs), with the
+    # level order; the deepest one is the cell type /taxonomy opens on.
+    # has_parent+, because a cluster may point only at its cluster-level taxon.
+    "browse.cluster_taxa": {
+        "params": {'clusters': 'iri_list'},
+        "limit": 500,
+        "query": """PREFIX biolink: <https://w3id.org/biolink/vocab/>
+PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?cluster ?taxon ?order
+WHERE {
+  VALUES ?cluster { {{clusters}} }
+  GRAPH <{{graph}}> {
+    ?cluster bican:has_parent+ ?taxon .
+    ?taxon bican:accession_id ?accession ;
+           bican:part_of_set/bican:order ?order .
+  }
+}
+LIMIT 500""",
     },
 }
